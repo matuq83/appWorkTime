@@ -1,0 +1,210 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wor Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .dark-mode {
+            background-color: #1a202c;
+            color: #cbd5e0;
+        }
+        .dark-mode .bg-white {
+            background-color: #2d3748;
+        }
+        .dark-mode .text-gray-700 {
+            color: #a0aec0;
+        }
+        .dark-mode .border-gray-300 {
+            border-color: #4a5568;
+        }
+        .dark-mode .bg-blue-600 {
+            background-color: #2b6cb0;
+        }
+        .dark-mode .bg-red-600 {
+            background-color: #c53030;
+        }
+        .dark-mode .bg-orange-600 {
+            background-color: #dd6b20;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            const tableBody = document.querySelector('tbody');
+            const totalHoursElement = document.querySelector('#total-hours');
+            const clearButton = document.querySelector('#clear-list');
+            const toggleModeButton = document.querySelector('#toggle-mode');
+            const menuButton = document.querySelector('#menu-button');
+            const menu = document.querySelector('#menu');
+
+            let workLogs = [];
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const fecha = document.querySelector('#fecha').value;
+                const horaIngreso = document.querySelector('#hora_ingreso').value;
+                const horaEgreso = document.querySelector('#hora_egreso').value;
+
+                const horasTotales = calculateHours(horaIngreso, horaEgreso);
+
+                const newLog = { fecha, horaIngreso, horaEgreso, horasTotales };
+                workLogs.push(newLog);
+                updateTable();
+                form.reset();
+            });
+
+            function calculateHours(horaIngreso, horaEgreso) {
+                const [ingresoHours, ingresoMinutes] = horaIngreso.split(':').map(Number);
+                const [egresoHours, egresoMinutes] = horaEgreso.split(':').map(Number);
+
+                const ingreso = new Date(0, 0, 0, ingresoHours, ingresoMinutes);
+                const egreso = new Date(0, 0, 0, egresoHours, egresoMinutes);
+
+                const diff = (egreso - ingreso) / (1000 * 60 * 60);
+                return diff.toFixed(2);
+            }
+
+            function updateTable() {
+                tableBody.innerHTML = '';
+                let totalHours = 0;
+
+                workLogs.forEach((log, index) => {
+                    totalHours += parseFloat(log.horasTotales);
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="py-2 px-4 border-b">${log.fecha}</td>
+                        <td class="py-2 px-4 border-b">${log.horaIngreso}</td>
+                        <td class="py-2 px-4 border-b">${log.horaEgreso}</td>
+                        <td class="py-2 px-4 border-b">${log.horasTotales}</td>
+                        <td class="py-2 px-4 border-b">
+                            <button class="text-blue-600 hover:underline" onclick="editLog(${index})">Editar</button>
+                            <button class="text-red-600 hover:underline" onclick="deleteLog(${index})">Eliminar</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                totalHoursElement.textContent = totalHours.toFixed(2);
+            }
+
+            window.editLog = (index) => {
+                const log = workLogs[index];
+                document.querySelector('#fecha').value = log.fecha;
+                document.querySelector('#hora_ingreso').value = log.horaIngreso;
+                document.querySelector('#hora_egreso').value = log.horaEgreso;
+
+                workLogs.splice(index, 1);
+                updateTable();
+            };
+
+            window.deleteLog = (index) => {
+                workLogs.splice(index, 1);
+                updateTable();
+            };
+
+            clearButton.addEventListener('click', () => {
+                if (confirm('¿Desea realizar limpieza total del listado?')) {
+                    workLogs = [];
+                    updateTable();
+                }
+            });
+
+            toggleModeButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+            });
+
+            menuButton.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+        });
+    </script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-600 p-4 text-white">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center">
+                <img alt="Logo de Wor Time con un reloj y un gráfico de barras" class="mr-2" height="50" src="https://storage.googleapis.com/a1aa/image/iJx71gCL7P5UMttdn43KvyaJkM1TOJuDKVdE443M25TXfh6JA.jpg" width="50">
+                <a href="#" class="text-2xl font-bold">Wor Time</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-button" class="text-white focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <ul id="menu" class="hidden md:flex space-x-4">
+                <li><a href="#" class="hover:underline">Inicio</a></li>
+                <li><a href="#" class="hover:underline">Registrar Horas</a></li>
+                <li><a href="#" class="hover:underline">Resumen Mensual</a></li>
+                <li><a href="#" class="hover:underline">Exportar</a></li>
+                <li><button id="toggle-mode" class="hover:underline">Modo Día/Noche</button></li>
+            </ul>
+        </div>
+        <div id="menu" class="hidden md:hidden bg-blue-600 p-4">
+            <ul class="space-y-4">
+                <li><a href="#" class="block text-white hover:underline">Inicio</a></li>
+                <li><a href="#" class="block text-white hover:underline">Registrar Horas</a></li>
+                <li><a href="#" class="block text-white hover:underline">Resumen Mensual</a></li>
+                <li><a href="#" class="block text-white hover:underline">Exportar</a></li>
+                <li><button id="toggle-mode" class="block text-white hover:underline">Modo Día/Noche</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-8 px-4">
+        <div class="bg-white p-6 rounded shadow-md">
+            <h2 class="text-2xl font-bold mb-4">Registrar Horas Laborales</h2>
+            <form>
+                <div class="mb-4">
+                    <label for="fecha" class="block text-gray-700">Fecha de Trabajo</label>
+                    <input type="date" id="fecha" class="w-full p-2 border border-gray-300 rounded mt-1" required>
+                </div>
+                <div class="mb-4">
+                    <label for="hora_ingreso" class="block text-gray-700">Hora de Ingreso</label>
+                    <input type="time" id="hora_ingreso" class="w-full p-2 border border-gray-300 rounded mt-1" required>
+                </div>
+                <div class="mb-4">
+                    <label for="hora_egreso" class="block text-gray-700">Hora de Egreso</label>
+                    <input type="time" id="hora_egreso" class="w-full p-2 border border-gray-300 rounded mt-1" required>
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Registrar</button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow-md mt-8">
+            <h2 class="text-2xl font-bold mb-4">Resumen Mensual</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-4 border-b">Fecha</th>
+                            <th class="py-2 px-4 border-b">Hora de Ingreso</th>
+                            <th class="py-2 px-4 border-b">Hora de Egreso</th>
+                            <th class="py-2 px-4 border-b">Horas Totales</th>
+                            <th class="py-2 px-4 border-b">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas se agregarán dinámicamente aquí -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-xl font-bold">Horas totales acumuladas este mes: <span id="total-hours">0</span></h3>
+            </div>
+            <button id="clear-list" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mt-4">Limpiar Listado</button>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow-md mt-8">
+            <h2 class="text-2xl font-bold mb-4">Exportar Datos</h2>
+            <button class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">Exportar a Excel</button>
+        </div>
+    </div>
+</body>
+</html>
