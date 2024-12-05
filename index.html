@@ -1,210 +1,396 @@
+<!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wor Time</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Work Time</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: Arial, sans-serif;
         }
+
         .dark-mode {
             background-color: #1a202c;
             color: #cbd5e0;
         }
-        .dark-mode .bg-white {
+
+        .dark-mode .bg-light {
+            background-color: #2d3748 !important;
+        }
+
+        .dark-mode .navbar-light .navbar-nav .nav-link {
+            color: #a0aec0 !important;
+        }
+
+        .fixed-buttons {
+            position: sticky;
+            bottom: 0;
+            background-color: white;
+            z-index: 10;
+            padding: 10px 0;
+        }
+
+        .dark-mode .fixed-buttons {
             background-color: #2d3748;
         }
-        .dark-mode .text-gray-700 {
-            color: #a0aec0;
+
+        #back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            z-index: 1000;
         }
-        .dark-mode .border-gray-300 {
-            border-color: #4a5568;
+
+        #back-to-top i {
+            font-size: 24px;
         }
-        .dark-mode .bg-blue-600 {
-            background-color: #2b6cb0;
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
         }
-        .dark-mode .bg-red-600 {
-            background-color: #c53030;
+
+        .navbar-brand img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
         }
-        .dark-mode .bg-orange-600 {
-            background-color: #dd6b20;
+
+        .welcome-text {
+            margin-left: 10px;
+        }
+
+        @media (max-width: 991px) {
+            .navbar-nav {
+                margin-top: 15px;
+            }
+            
+            .welcome-text {
+                margin-left: 0;
+                margin-bottom: 10px;
+            }
         }
     </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.querySelector('form');
-            const tableBody = document.querySelector('tbody');
-            const totalHoursElement = document.querySelector('#total-hours');
-            const clearButton = document.querySelector('#clear-list');
-            const toggleModeButton = document.querySelector('#toggle-mode');
-            const menuButton = document.querySelector('#menu-button');
-            const menu = document.querySelector('#menu');
-
-            let workLogs = [];
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const fecha = document.querySelector('#fecha').value;
-                const horaIngreso = document.querySelector('#hora_ingreso').value;
-                const horaEgreso = document.querySelector('#hora_egreso').value;
-
-                const horasTotales = calculateHours(horaIngreso, horaEgreso);
-
-                const newLog = { fecha, horaIngreso, horaEgreso, horasTotales };
-                workLogs.push(newLog);
-                updateTable();
-                form.reset();
-            });
-
-            function calculateHours(horaIngreso, horaEgreso) {
-                const [ingresoHours, ingresoMinutes] = horaIngreso.split(':').map(Number);
-                const [egresoHours, egresoMinutes] = horaEgreso.split(':').map(Number);
-
-                const ingreso = new Date(0, 0, 0, ingresoHours, ingresoMinutes);
-                const egreso = new Date(0, 0, 0, egresoHours, egresoMinutes);
-
-                const diff = (egreso - ingreso) / (1000 * 60 * 60);
-                return diff.toFixed(2);
-            }
-
-            function updateTable() {
-                tableBody.innerHTML = '';
-                let totalHours = 0;
-
-                workLogs.forEach((log, index) => {
-                    totalHours += parseFloat(log.horasTotales);
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="py-2 px-4 border-b">${log.fecha}</td>
-                        <td class="py-2 px-4 border-b">${log.horaIngreso}</td>
-                        <td class="py-2 px-4 border-b">${log.horaEgreso}</td>
-                        <td class="py-2 px-4 border-b">${log.horasTotales}</td>
-                        <td class="py-2 px-4 border-b">
-                            <button class="text-blue-600 hover:underline" onclick="editLog(${index})">Editar</button>
-                            <button class="text-red-600 hover:underline" onclick="deleteLog(${index})">Eliminar</button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
-                totalHoursElement.textContent = totalHours.toFixed(2);
-            }
-
-            window.editLog = (index) => {
-                const log = workLogs[index];
-                document.querySelector('#fecha').value = log.fecha;
-                document.querySelector('#hora_ingreso').value = log.horaIngreso;
-                document.querySelector('#hora_egreso').value = log.horaEgreso;
-
-                workLogs.splice(index, 1);
-                updateTable();
-            };
-
-            window.deleteLog = (index) => {
-                workLogs.splice(index, 1);
-                updateTable();
-            };
-
-            clearButton.addEventListener('click', () => {
-                if (confirm('¿Desea realizar limpieza total del listado?')) {
-                    workLogs = [];
-                    updateTable();
-                }
-            });
-
-            toggleModeButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-            });
-
-            menuButton.addEventListener('click', () => {
-                menu.classList.toggle('hidden');
-            });
-        });
-    </script>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 p-4 text-white">
-        <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center">
-                <img alt="Logo de Wor Time con un reloj y un gráfico de barras" class="mr-2" height="50" src="https://storage.googleapis.com/a1aa/image/iJx71gCL7P5UMttdn43KvyaJkM1TOJuDKVdE443M25TXfh6JA.jpg" width="50">
-                <a href="#" class="text-2xl font-bold">Wor Time</a>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">
+            <img src="./img/worktime-logo-alt.svg" alt="Logo"> Work Time
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav mr-auto">
+                <span class="welcome-text navbar-text d-none">
+                    ¡Buen día, <span id="username">Usuario</span>!
+                </span>
             </div>
-            <div class="md:hidden">
-                <button id="menu-button" class="text-white focus:outline-none">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-            <ul id="menu" class="hidden md:flex space-x-4">
-                <li><a href="#" class="hover:underline">Inicio</a></li>
-                <li><a href="#" class="hover:underline">Registrar Horas</a></li>
-                <li><a href="#" class="hover:underline">Resumen Mensual</a></li>
-                <li><a href="#" class="hover:underline">Exportar</a></li>
-                <li><button id="toggle-mode" class="hover:underline">Modo Día/Noche</button></li>
-            </ul>
-        </div>
-        <div id="menu" class="hidden md:hidden bg-blue-600 p-4">
-            <ul class="space-y-4">
-                <li><a href="#" class="block text-white hover:underline">Inicio</a></li>
-                <li><a href="#" class="block text-white hover:underline">Registrar Horas</a></li>
-                <li><a href="#" class="block text-white hover:underline">Resumen Mensual</a></li>
-                <li><a href="#" class="block text-white hover:underline">Exportar</a></li>
-                <li><button id="toggle-mode" class="block text-white hover:underline">Modo Día/Noche</button></li>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <button id="toggle-theme" class="btn btn-secondary mr-2">
+                        <i class="fas fa-sun"></i> <span class="theme-text">Modo Día</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button id="logout" class="btn btn-danger d-none">Cerrar Sesión</button>
+                </li>
             </ul>
         </div>
     </nav>
 
-    <div class="container mx-auto mt-8 px-4">
-        <div class="bg-white p-6 rounded shadow-md">
-            <h2 class="text-2xl font-bold mb-4">Registrar Horas Laborales</h2>
-            <form>
-                <div class="mb-4">
-                    <label for="fecha" class="block text-gray-700">Fecha de Trabajo</label>
-                    <input type="date" id="fecha" class="w-full p-2 border border-gray-300 rounded mt-1" required>
+    <div class="container mt-5">
+        <!-- Registro de Usuario -->
+        <div id="register-page" class="d-none">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Registro de Usuario</h5>
+                            <form id="register-form">
+                                <div class="form-group">
+                                    <label for="first-name">Nombre</label>
+                                    <input type="text" class="form-control" id="first-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="last-name">Apellido</label>
+                                    <input type="text" class="form-control" id="last-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sector">Sector</label>
+                                    <select id="sector" class="form-control" required>
+                                        <option value="alimentos-bebidas">Alimentos y Bebidas</option>
+                                        <option value="cocina">Cocina</option>
+                                        <option value="recepcion">Recepción</option>
+                                        <option value="mantenimiento">Mantenimiento</option>
+                                        <option value="administracion">Administración</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Contraseña</label>
+                                    <input type="password" class="form-control" id="password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Registrar</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="hora_ingreso" class="block text-gray-700">Hora de Ingreso</label>
-                    <input type="time" id="hora_ingreso" class="w-full p-2 border border-gray-300 rounded mt-1" required>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Iniciar Sesión</h5>
+                            <form id="login-form">
+                                <div class="form-group">
+                                    <label for="login-email">Correo Electrónico</label>
+                                    <input type="email" class="form-control" id="login-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="login-password">Contraseña</label>
+                                    <input type="password" class="form-control" id="login-password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Ingresar</button>
+                                <button type="button" class="btn btn-secondary" id="register-btn">Crear Cuenta</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="hora_egreso" class="block text-gray-700">Hora de Egreso</label>
-                    <input type="time" id="hora_egreso" class="w-full p-2 border border-gray-300 rounded mt-1" required>
+            </div>
+        </div>
+
+        <!-- Work Records -->
+        <div id="work-records" class="d-none">
+            <h1>Registro de Jornadas Trabajadas</h1>
+            <form id="work-form">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="work-date">Fecha de Trabajo</label>
+                        <input type="date" id="work-date" class="form-control" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="start-time">Hora de Ingreso</label>
+                        <input type="time" id="start-time" class="form-control" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="end-time">Hora de Egreso</label>
+                        <input type="time" id="end-time" class="form-control" required>
+                    </div>
                 </div>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Registrar</button>
+                <button type="submit" class="btn btn-primary">Registrar</button>
             </form>
-        </div>
 
-        <div class="bg-white p-6 rounded shadow-md mt-8">
-            <h2 class="text-2xl font-bold mb-4">Resumen Mensual</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr>
-                            <th class="py-2 px-4 border-b">Fecha</th>
-                            <th class="py-2 px-4 border-b">Hora de Ingreso</th>
-                            <th class="py-2 px-4 border-b">Hora de Egreso</th>
-                            <th class="py-2 px-4 border-b">Horas Totales</th>
-                            <th class="py-2 px-4 border-b">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Las filas se agregarán dinámicamente aquí -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-4">
-                <h3 class="text-xl font-bold">Horas totales acumuladas este mes: <span id="total-hours">0</span></h3>
-            </div>
-            <button id="clear-list" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mt-4">Limpiar Listado</button>
-        </div>
+            <table class="table table-striped mt-3">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora de Ingreso</th>
+                        <th>Hora de Egreso</th>
+                        <th>Horas Totales</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="work-table"></tbody>
+            </table>
 
-        <div class="bg-white p-6 rounded shadow-md mt-8">
-            <h2 class="text-2xl font-bold mb-4">Exportar Datos</h2>
-            <button class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">Exportar a Excel</button>
+            <div id="total-hours">
+                <h4>Total de Jornadas Trabajadas: <span id="total-jornadas">0</span> | Total de Horas: <span id="total-horas">0</span></h4>
+            </div>
+
+            <div class="fixed-buttons text-center">
+                <button id="clear-list" class="btn btn-danger">Limpiar Lista</button>
+                <button id="export-excel" class="btn btn-success">Descargar en Excel</button>
+            </div>
         </div>
     </div>
+
+    <button id="back-to-top" class="btn btn-primary">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <footer class="mt-4">
+        <p>&copy; 2024 Work Time</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+        $(function () {
+            const loginPage = $("#login-page");
+            const registerPage = $("#register-page");
+            const workRecords = $("#work-records");
+            const backToTopButton = $("#back-to-top");
+            const toggleThemeButton = $("#toggle-theme");
+            const welcomeText = $(".welcome-text");
+            const usernameSpan = $("#username");
+            const logoutButton = $("#logout");
+
+            let workData = [];
+            let editingIndex = -1;
+
+            // Show Register Page
+            $("#register-btn").on("click", function () {
+                loginPage.addClass("d-none");
+                registerPage.removeClass("d-none");
+            });
+
+            // Show Login Page
+            $("#login-form").on("submit", function (e) {
+                e.preventDefault();
+                loginPage.addClass("d-none");
+                workRecords.removeClass("d-none");
+                welcomeText.removeClass("d-none");
+                logoutButton.removeClass("d-none");
+                usernameSpan.text($("#login-email").val().split('@')[0]); // Show only the username part of email
+                backToTopButton.show();
+            });
+
+            // Handle Registration Form
+            $("#register-form").on("submit", function (e) {
+                e.preventDefault();
+                alert("Usuario registrado con éxito.");
+                registerPage.addClass("d-none");
+                loginPage.removeClass("d-none");
+            });
+
+            // Toggle Theme (Dark/Light Mode)
+            toggleThemeButton.on("click", function () {
+                $("body").toggleClass("dark-mode");
+                const themeText = $("body").hasClass("dark-mode") ? "Modo Noche" : "Modo Día";
+                toggleThemeButton.find(".theme-text").text(themeText);
+            });
+
+            // Log Out
+            $("#logout").on("click", function () {
+                workRecords.addClass("d-none");
+                loginPage.removeClass("d-none");
+                welcomeText.addClass("d-none");
+                logoutButton.addClass("d-none");
+                $("#login-form")[0].reset();
+            });
+
+            // Add Work Record
+            $("#work-form").on("submit", function (e) {
+                e.preventDefault();
+                const date = $("#work-date").val();
+                const startTime = $("#start-time").val();
+                const endTime = $("#end-time").val();
+
+                // Prevent duplicate entries
+                if (workData.some(item => item.date === date && item.startTime === startTime && item.endTime === endTime && editingIndex === -1)) {
+                    alert("Ya existe una jornada con estas horas.");
+                    return;
+                }
+
+                const hoursWorked = calculateHours(startTime, endTime);
+
+                if (editingIndex >= 0) {
+                    workData[editingIndex] = { date, startTime, endTime, hoursWorked };
+                    editingIndex = -1;
+                } else {
+                    workData.push({ date, startTime, endTime, hoursWorked });
+                }
+
+                updateWorkTable();
+            });
+
+            // Edit Work Record
+            $(document).on("click", ".edit-button", function () {
+                const row = $(this).closest("tr");
+                const data = row.children("td");
+                const date = data[0].textContent;
+                const startTime = data[1].textContent;
+                const endTime = data[2].textContent;
+
+                editingIndex = row.index();
+                $("#work-date").val(date);
+                $("#start-time").val(startTime);
+                $("#end-time").val(endTime);
+            });
+
+            // Delete Work Record
+            $(document).on("click", ".delete-button", function () {
+                const row = $(this).closest("tr");
+                const date = row.children("td").eq(0).text();
+                workData = workData.filter(item => item.date !== date);
+                updateWorkTable();
+            });
+
+            // Update Work Table
+            function updateWorkTable() {
+                const tbody = $("#work-table").empty();
+                let totalHours = 0;
+                workData.forEach((item, index) => {
+                    totalHours += parseFloat(item.hoursWorked);
+                    tbody.append(`
+                        <tr>
+                            <td>${item.date}</td>
+                            <td>${item.startTime}</td>
+                            <td>${item.endTime}</td>
+                            <td>${item.hoursWorked}</td>
+                            <td>
+                                <button class="btn btn-warning edit-button">Editar</button>
+                                <button class="btn btn-danger delete-button">Eliminar</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+                $("#total-jornadas").text(workData.length);
+                $("#total-horas").text(totalHours.toFixed(2));
+            }
+
+            // Calculate Hours Worked
+            function calculateHours(startTime, endTime) {
+                const start = new Date(`1970-01-01T${startTime}:00`);
+                const end = new Date(`1970-01-01T${endTime}:00`);
+                const diff = (end - start) / 1000 / 60 / 60;
+                return diff.toFixed(2);
+            }
+
+            // Clear List
+            $("#clear-list").on("click", function () {
+                workData = [];
+                updateWorkTable();
+            });
+
+            // Export to Excel
+            $("#export-excel").on("click", function () {
+                const ws = XLSX.utils.table_to_sheet(document.querySelector("table"));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
+                XLSX.writeFile(wb,"jornadas_trabajadas.xlsx");
+            });
+
+            // Show Back to Top Button
+            $(window).on("scroll", function () {
+                if ($(window).scrollTop() > 300) {
+                    backToTopButton.show();
+                } else {
+                    backToTopButton.hide();
+                }
+            });
+
+            // Scroll to Top
+            backToTopButton.on("click", function () {
+                $("html, body").animate({ scrollTop: 0 }, 500);
+            });
+        });
+    </script>
 </body>
+
 </html>

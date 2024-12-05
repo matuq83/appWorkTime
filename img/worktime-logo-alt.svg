@@ -1,0 +1,18 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo cuadrado con bordes redondeados -->
+  <rect x="10" y="10" width="180" height="180" rx="20" fill="#1976D2" />
+  
+  <!-- Círculo del reloj -->
+  <circle cx="100" cy="100" r="70" fill="white" />
+  
+  <!-- Manecillas del reloj estilizadas -->
+  <path d="M100 100 L100 50" stroke="#1976D2" stroke-width="8" stroke-linecap="round" />
+  <path d="M100 100 L135 100" stroke="#1976D2" stroke-width="8" stroke-linecap="round" />
+  
+  <!-- Punto central -->
+  <circle cx="100" cy="100" r="6" fill="#1976D2" />
+  
+  <!-- Líneas decorativas -->
+  <line x1="60" y1="30" x2="140" y2="30" stroke="white" stroke-width="4" stroke-linecap="round" />
+  <line x1="70" y1="170" x2="130" y2="170" stroke="white" stroke-width="4" stroke-linecap="round" />
+</svg>
