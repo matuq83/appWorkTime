@@ -11,19 +11,49 @@
         body {
             font-family: Arial, sans-serif;
         }
+        .table thead th {
+            color: black;
+        }
+        .dark-mode .card{
+            background-color: #2d3748;
+        }
+
+        .dark-mode .card-body{
+            color: #fff;
+        }
+
+        .dark-mode .card-title{
+            color: #fff;
+        }
+
+        .dark-mode .navbar-light .navbar-brand {
+            color: #fff;
+        }
 
         .dark-mode {
             background-color: #1a202c;
-            color: #cbd5e0;
+            color: #f7f3f3;
+        }
+
+        .dark-mode navbar-light .navbar-toggler-icon {
+            background-image: url(data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' color='#ffff' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 0, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e);
         }
 
         .dark-mode .bg-light {
             background-color: #2d3748 !important;
         }
 
+        .dark-mode .navbar-text {
+            color: #ffff;
+        }
+
         .dark-mode .navbar-light .navbar-nav .nav-link {
             color: #a0aec0 !important;
         }
+
+        .dark-mode .table thead th {
+                color: #fff;
+            }
 
         .fixed-buttons {
             position: sticky;
@@ -37,7 +67,10 @@
             background-color: #2d3748;
         }
 
+
+
         #back-to-top {
+            border-radius: 100px;
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -64,6 +97,11 @@
             margin-left: 10px;
         }
 
+        *, ::after, ::before {
+            padding: 3px;
+            box-sizing: border-box;
+            }
+
         @media (max-width: 991px) {
             .navbar-nav {
                 margin-top: 15px;
@@ -73,6 +111,29 @@
                 margin-left: 0;
                 margin-bottom: 10px;
             }
+
+            .h1, h1 {
+                font-size: 1.5rem;
+            }
+
+            .table thead th {
+                font-size: 0.7rem;
+            }
+
+
+            .table td, .table th {
+                font-size: 14px;
+            }
+
+            .h4, h4 {
+                font-size: 1.1rem;
+            }
+            .btn:not(:disabled):not(.disabled) {
+                margin-top: 6px;
+                margin-right: 6px;
+                cursor: pointer;
+            }
+
         }
     </style>
 </head>
@@ -131,6 +192,7 @@
                                         <option value="alimentos-bebidas">Alimentos y Bebidas</option>
                                         <option value="cocina">Cocina</option>
                                         <option value="recepcion">Recepción</option>
+                                        <option value="ama-de-llaves">Ama de Llaves</option>
                                         <option value="mantenimiento">Mantenimiento</option>
                                         <option value="administracion">Administración</option>
                                     </select>
@@ -229,6 +291,25 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
+            authDomain: "work-time-app-mq.firebaseapp.com",
+            projectId: "work-time-app-mq",
+            storageBucket: "work-time-app-mq.firebasestorage.app",
+            messagingSenderId: "627385644653",
+            appId: "1:627385644653:web:bc22287f25b39fabf93164"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+    </script>
     <script>
         $(function () {
             const loginPage = $("#login-page");
