@@ -5,21 +5,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Work Time</title>
+    <link rel="icon" href="./img/worktime-logo-alt.svg" type="imagen">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,500&family=Oswald:wght@200..700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
         }
 
+        .navbar-brand {
+            font-family:"Oswald";
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        dl, ol, ul {
+            font-size: 10px;
+            margin-top: 0;
+        }
+
+        .h1, h1 {
+            font-family:"Oswald";
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        .h5, h5 {
+            font-weight: 700;
+        }
         .card {
             border-radius: 10px;
             background-color: #d9d9d9;
         }
-
+        
+        .h4, h4 {
+            font-weight: 700;
+            font-style: normal;
+        }
         .table thead th {
             color: black;
         }
+
+
         .dark-mode .card{
             background-color: #2d3748;
         }
@@ -113,6 +143,11 @@
             }
 
         @media (max-width: 991px) {
+
+            .navbar-brand {
+                font-size: 25px;
+            }
+
             .navbar-nav {
                 margin-top: 15px;
             }
@@ -136,7 +171,7 @@
             }
 
             .h4, h4 {
-                font-size: 1.2rem;
+                font-size: 0.7rem;
             }
             .btn:not(:disabled):not(.disabled) {
                 margin-top: 6px;
@@ -232,8 +267,8 @@
                                     <input type="email" class="form-control" id="login-email" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="login-password">Contraseña</label>
-                                    <input type="password" class="form-control" id="login-password" required>
+                                    <label for="login-password">Contraseña<ul>(No menor a 6 digitos)</ul></label>
+                                    <input type="password" class="form-control" id="login-password" required pattern=".{6,}" title="La contraseña debe tener al menos 6 caracteres">
                                 </div>
                                 <button type="submit" class="btn btn-primary">Ingresar</button>
                                 <button type="button" class="btn btn-secondary" id="register-btn">Crear Cuenta</button>
@@ -294,33 +329,40 @@
     </button>
 
     <footer class="mt-4">
-        <p>&copy; 2024 Work Time | Pwd by Matias Quintana </p>
+        <p>&copy; 2024 Work Time | Pwd by <a href="">Matias Quintana</a> </p>
     </footer>
+    
+<!-- Cargar dependencias necesarias -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
+<!-- Firebase v9 -->
+<script type="module">
+    // Importa las funciones necesarias desde Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
-            authDomain: "work-time-app-mq.firebaseapp.com",
-            projectId: "work-time-app-mq",
-            storageBucket: "work-time-app-mq.firebasestorage.app",
-            messagingSenderId: "627385644653",
-            appId: "1:627385644653:web:bc22287f25b39fabf93164"
-        };
+    // Tu configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
+        authDomain: "work-time-app-mq.firebaseapp.com",
+        projectId: "work-time-app-mq",
+        storageBucket: "work-time-app-mq.firebasestorage.app",
+        messagingSenderId: "627385644653",
+        appId: "1:627385644653:web:bc22287f25b39fabf93164"
+    };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-    </script>
-    <!-- <script>
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);  // Autenticación de Firebase
+    const db = getDatabase(app); // Base de datos de Firebase
+</script>
+
+    <!--
+    <script>
         $(function () {
             const loginPage = $("#login-page");
             const registerPage = $("#register-page");
@@ -481,295 +523,9 @@
                 $("html, body").animate({ scrollTop: 0 }, 500);
             });
         });
-    </script> -->
-    
-<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
+    </script>
 
-<script>
-    // Initialize Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
-        authDomain: "work-time-app-mq.firebaseapp.com",
-        projectId: "work-time-app-mq",
-        storageBucket: "work-time-app-mq.firebasestorage.app",
-        messagingSenderId: "627385644653",
-        appId: "1:627385644653:web:bc22287f25b39fabf93164"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    $(function () {
-        const loginPage = $("#login-page");
-        const registerPage = $("#register-page");
-        const workRecords = $("#work-records");
-        const backToTopButton = $("#back-to-top");
-        const toggleThemeButton = $("#toggle-theme");
-        const welcomeText = $(".welcome-text");
-        const usernameSpan = $("#username");
-        const logoutButton = $("#logout");
-
-        let workData = [];
-        let editingIndex = -1;
-
-        // Firebase Auth State Observer
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                loginPage.addClass("d-none");
-                workRecords.removeClass("d-none");
-                welcomeText.removeClass("d-none");
-                logoutButton.removeClass("d-none");
-                usernameSpan.text(user.email.split('@')[0]);
-                backToTopButton.show();
-                loadUserData(user.uid);
-            } else {
-                workRecords.addClass("d-none");
-                loginPage.removeClass("d-none");
-                welcomeText.addClass("d-none");
-                logoutButton.addClass("d-none");
-            }
-        });
-
-        // Load User Data from Firebase
-        function loadUserData(userId) {
-            db.collection('users')
-                .doc(userId)
-                .collection('workRecords')
-                .orderBy('date')
-                .get()
-                .then((querySnapshot) => {
-                    workData = [];
-                    querySnapshot.forEach((doc) => {
-                        workData.push({ ...doc.data(), id: doc.id });
-                    });
-                    updateWorkTable();
-                })
-                .catch((error) => {
-                    console.error("Error loading data:", error);
-                });
-        }
-
-        // Show Register Page
-        $("#register-btn").on("click", function () {
-            loginPage.addClass("d-none");
-            registerPage.removeClass("d-none");
-        });
-
-        // Handle Login
-        $("#login-form").on("submit", function (e) {
-            e.preventDefault();
-            const email = $("#login-email").val();
-            const password = $("#login-password").val();
-
-            auth.signInWithEmailAndPassword(email, password)
-                .catch((error) => {
-                    alert("Error de inicio de sesión: " + error.message);
-                });
-        });
-
-        // Handle Registration
-        $("#register-form").on("submit", function (e) {
-            e.preventDefault();
-            const email = $("#register-email").val();
-            const password = $("#register-password").val();
-
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    alert("Usuario registrado con éxito.");
-                    registerPage.addClass("d-none");
-                    loginPage.removeClass("d-none");
-                })
-                .catch((error) => {
-                    alert("Error de registro: " + error.message);
-                });
-        });
-
-        // Log Out
-        $("#logout").on("click", function () {
-            auth.signOut()
-                .then(() => {
-                    workData = [];
-                    updateWorkTable();
-                })
-                .catch((error) => {
-                    console.error("Error al cerrar sesión:", error);
-                });
-        });
-
-        // Add Work Record
-        $("#work-form").on("submit", function (e) {
-            e.preventDefault();
-            const date = $("#work-date").val();
-            const startTime = $("#start-time").val();
-            const endTime = $("#end-time").val();
-
-            if (startTime >= endTime) {
-                alert("La hora de ingreso debe ser menor a la hora de egreso.");
-                return;
-            }
-
-            // Prevent duplicate entries
-            if (workData.some(item => item.date === date && item.startTime === startTime && item.endTime === endTime && editingIndex === -1)) {
-                alert("Ya existe una jornada con estas horas.");
-                return;
-            }
-
-            const hoursWorked = calculateHours(startTime, endTime);
-            const record = { date, startTime, endTime, hoursWorked };
-
-            const user = auth.currentUser;
-            if (!user) return;
-
-            if (editingIndex >= 0) {
-                // Update existing record
-                db.collection('users')
-                    .doc(user.uid)
-                    .collection('workRecords')
-                    .doc(workData[editingIndex].id)
-                    .update(record)
-                    .then(() => {
-                        editingIndex = -1;
-                        loadUserData(user.uid);
-                        $("#work-form")[0].reset();
-                    })
-                    .catch((error) => {
-                        console.error("Error updating record:", error);
-                    });
-            } else {
-                // Add new record
-                db.collection('users')
-                    .doc(user.uid)
-                    .collection('workRecords')
-                    .add(record)
-                    .then(() => {
-                        loadUserData(user.uid);
-                        $("#work-form")[0].reset();
-                    })
-                    .catch((error) => {
-                        console.error("Error adding record:", error);
-                    });
-            }
-        });
-
-        // Edit Work Record
-        $(document).on("click", ".edit-button", function () {
-            const row = $(this).closest("tr");
-            editingIndex = workData.findIndex(item => item.id === $(this).data('id'));
-            const record = workData[editingIndex];
-            
-            $("#work-date").val(record.date);
-            $("#start-time").val(record.startTime);
-            $("#end-time").val(record.endTime);
-        });
-
-        // Delete Work Record
-        $(document).on("click", ".delete-button", function () {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            const recordId = $(this).data('id');
-            
-            db.collection('users')
-                .doc(user.uid)
-                .collection('workRecords')
-                .doc(recordId)
-                .delete()
-                .then(() => {
-                    loadUserData(user.uid);
-                })
-                .catch((error) => {
-                    console.error("Error deleting record:", error);
-                });
-        });
-
-        // Update Work Table
-        function updateWorkTable() {
-            const tbody = $("#work-table").empty();
-            let totalHours = 0;
-            
-            workData.forEach((item) => {
-                totalHours += parseFloat(item.hoursWorked);
-                tbody.append(`
-                    <tr>
-                        <td>${item.date}</td>
-                        <td>${item.startTime}</td>
-                        <td>${item.endTime}</td>
-                        <td>${item.hoursWorked}</td>
-                        <td>
-                            <button class="btn btn-warning edit-button" data-id="${item.id}">Editar</button>
-                            <button class="btn btn-danger delete-button" data-id="${item.id}">Eliminar</button>
-                        </td>
-                    </tr>
-                `);
-            });
-            
-            $("#total-jornadas").text(workData.length);
-            $("#total-horas").text(totalHours.toFixed(2));
-        }
-
-        // Calculate Hours
-        function calculateHours(startTime, endTime) {
-            const start = new Date(`1970-01-01T${startTime}:00`);
-            const end = new Date(`1970-01-01T${endTime}:00`);
-            const diff = (end - start) / 1000 / 60 / 60;
-            return diff.toFixed(2);
-        }
-
-        // Clear List
-        $("#clear-list").on("click", function () {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            if (confirm("¿Está seguro de que desea borrar todos los registros?")) {
-                const batch = db.batch();
-                workData.forEach((record) => {
-                    const ref = db.collection('users').doc(user.uid).collection('workRecords').doc(record.id);
-                    batch.delete(ref);
-                });
-
-                batch.commit()
-                    .then(() => {
-                        workData = [];
-                        updateWorkTable();
-                    })
-                    .catch((error) => {
-                        console.error("Error clearing records:", error);
-                    });
-            }
-        });
-
-        // Export to Excel (keeping your existing implementation)
-        $("#export-excel").on("click", function () {
-            const ws = XLSX.utils.table_to_sheet(document.querySelector("table"));
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
-            XLSX.writeFile(wb, "jornadas_trabajadas.xlsx");
-        });
-
-        // Back to Top functionality
-        $(window).on("scroll", function () {
-            if ($(window).scrollTop() > 300) {
-                backToTopButton.show();
-            } else {
-                backToTopButton.hide();
-            }
-        });
-
-        backToTopButton.on("click", function () {
-            $("html, body").animate({ scrollTop: 0 }, 500);
-        });
-
-        // Theme Toggle
-        toggleThemeButton.on("click", function () {
-            $("body").toggleClass("dark-mode");
-            const themeText = $("body").hasClass("dark-mode") ? "Modo Noche" : "Modo Día";
-            toggleThemeButton.find(".theme-text").text(themeText);
-        });
-    });
-</script>
+-->
 </body>
-
+<script type="module" src="./app.js"></script>
 </html>
