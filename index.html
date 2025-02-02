@@ -110,6 +110,7 @@
 
 
         #back-to-top {
+            background-color: #6e71e19e;
             border-radius: 100px;
             position: fixed;
             bottom: 20px;
@@ -329,14 +330,19 @@
     </button>
 
     <footer class="mt-4">
-        <p>&copy; 2024 Work Time | Pwd by <a href="https://linktr.ee/mquintana83">Matias Quintana</a> </p>
+        <p>&copy <span id="year"></span> Work Time | Pwd by <a href="https://linktr.ee/mquintana83">Matias Quintana</a> </p>
     </footer>
+
+    <script>
+        document.getElementById('year').innerText = new Date().getFullYear();
+    </script>
     
 <!-- Cargar dependencias necesarias -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <!-- Firebase v9 -->
 <script type="module">

@@ -17,8 +17,12 @@ import {
     deleteDoc, 
     query, 
     orderBy,
-    setDoc 
+    setDoc,
+    getDoc 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+// SheetJS para exportar a Excel
+import * as XLSX from 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
@@ -67,6 +71,10 @@ $(function () {
                     console.log("No se encontraron datos para este usuario.");
                     usernameSpan.text("Usuario");
                 }
+
+                // Cargar los registros de trabajo del usuario desde Firestore
+                await loadUserData(user.uid);
+
             } catch (error) {
                 console.error("Error al obtener datos del usuario:", error);
                 usernameSpan.text("Usuario");
@@ -78,7 +86,6 @@ $(function () {
             logoutButton.addClass("d-none");
         }
     });
-    
     
 
     // Load User Data from Firebase
@@ -267,24 +274,23 @@ $(function () {
         return diff.toFixed(2);
     }
 
-    // Clear List
+    // Clear Work Records (Delete all)
     $("#clear-list").on("click", async function () {
         const user = auth.currentUser;
         if (!user) return;
 
-        if (confirm("¿Está seguro de que desea borrar todos los registros?")) {
-            try {
-                const promises = workData.map(record => 
-                    deleteDoc(doc(db, `users/${user.uid}/workRecords/${record.id}`))
-                );
-                await Promise.all(promises);
-                
-                workData = [];
-                updateWorkTable();  // Limpiar la tabla después de borrar los registros
-            } catch (error) {
-                console.error("Error clearing records:", error);
-                alert("Error al borrar los registros: " + error.message);
-            }
+        try {
+            const workRecordsRef = collection(db, `users/${user.uid}/workRecords`);
+            const querySnapshot = await getDocs(workRecordsRef);
+
+            querySnapshot.forEach((doc) => {
+                deleteDoc(doc.ref);
+            });
+
+            await loadUserData(user.uid);  // Recargar los datos después de limpiar
+        } catch (error) {
+            console.error("Error clearing records:", error);
+            alert("Error al limpiar los registros: " + error.message);
         }
     });
 
@@ -295,24 +301,17 @@ $(function () {
         XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
         XLSX.writeFile(wb, "jornadas_trabajadas.xlsx");
     });
-
-    // Back to Top Button
-    $(window).on("scroll", function () {
-        if ($(window).scrollTop() > 300) {
-            backToTopButton.show();
-        } else {
-            backToTopButton.hide();
-        }
-    });
-
-    backToTopButton.on("click", function () {
-        $("html, body").animate({ scrollTop: 0 }, 500);
-    });
-
+    
     // Theme Toggle
     toggleThemeButton.on("click", function () {
         $("body").toggleClass("dark-mode");
         const themeText = $("body").hasClass("dark-mode") ? "Modo Noche" : "Modo Día";
         toggleThemeButton.find(".theme-text").text(themeText);
     });
+
+    backToTopButton.on("click", function () {
+        $("html, body").animate({ scrollTop: 0 }, 500);
+    });
+
+    
 });
