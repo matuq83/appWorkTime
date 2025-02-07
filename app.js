@@ -22,8 +22,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 // SheetJS para exportar a Excel
-import * as XLSX from 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-
+//import * as XLSX from 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 const firebaseConfig = {
     apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
     authDomain: "work-time-app-mq.firebaseapp.com",
@@ -37,6 +36,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+function showLoadingSpinner() {
+    $("#loading-spinner").show();
+}
+
+function hideLoadingSpinner() {
+    $("#loading-spinner").hide();
+}
+
+async function loadUserData(userId) {
+    showLoadingSpinner();
+    try {
+        // Cargar datos...
+    } finally {
+        hideLoadingSpinner();
+    }
+}
+
 
 $(function () {
     // DOM Elements
@@ -294,14 +311,101 @@ $(function () {
         }
     });
 
-    // Export to Excel
-    $("#export-excel").on("click", function () {
-        const ws = XLSX.utils.table_to_sheet(document.querySelector("table"));
+ // Exportar a Excel
+ function exportToExcel(data) {
+    if (!data || data.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+    }
+
+    try {
+        // Crear los datos para Excel
+        const excelData = [
+            ['Fecha', 'Hora de Ingreso', 'Hora de Egreso', 'Horas Totales'] // Headers
+        ];
+
+        // Agregar los datos
+        data.forEach(record => {
+            excelData.push([
+                record.date,
+                record.startTime,
+                record.endTime,
+                record.hoursWorked
+            ]);
+        });
+
+        // Calcular total de horas
+        const totalHoras = data.reduce((sum, record) => 
+            sum + parseFloat(record.hoursWorked), 0
+        ).toFixed(2);
+
+        // Agregar línea en blanco y totales
+        excelData.push([]);  // Línea en blanco
+        excelData.push(['Total Jornadas:', data.length]);
+        excelData.push(['Total Horas:', totalHoras]);
+
+        // Crear libro de trabajo
         const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+        // Ajustar anchos de columna
+        const wscols = [
+            {wch: 15},  // A
+            {wch: 15},  // B
+            {wch: 15},  // C
+            {wch: 15}   // D
+        ];
+        ws['!cols'] = wscols;
+
+        // Agregar la hoja al libro
         XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
+
+        // Guardar el archivo
         XLSX.writeFile(wb, "jornadas_trabajadas.xlsx");
-    });
+
+    } catch (error) {
+        console.error("Error al exportar:", error);
+        alert("Error al exportar a Excel: " + error.message);
+    }
+}
+
+// 3. Agregar el event listener para el botón de exportación
+document.getElementById("export-excel").addEventListener("click", function() {
+    exportToExcel(workData);
+});
+
+// 4. Función auxiliar para verificar que XLSX esté cargado
+function waitForXLSX(callback, maxAttempts = 10) {
+    let attempts = 0;
     
+    const checkXLSX = () => {
+        attempts++;
+        if (typeof XLSX !== 'undefined') {
+            callback();
+        } else if (attempts < maxAttempts) {
+            setTimeout(checkXLSX, 100);
+        } else {
+            console.error('No se pudo cargar la librería XLSX');
+            alert('Error: No se pudo cargar el exportador de Excel. Por favor, recarga la página.');
+        }
+    };
+    
+    checkXLSX();
+}
+
+// 5. Usar la función de espera
+document.getElementById("export-excel").addEventListener("click", function() {
+    waitForXLSX(() => {
+        exportToExcel(workData);
+    });
+});
+
+// 6. Para debugging
+window.addEventListener('load', function() {
+    console.log('XLSX disponible:', typeof XLSX !== 'undefined');
+    console.log('jQuery disponible:', typeof jQuery !== 'undefined');
+    console.log('workData disponible:', typeof workData !== 'undefined');
+});
     // Theme Toggle
     toggleThemeButton.on("click", function () {
         $("body").toggleClass("dark-mode");

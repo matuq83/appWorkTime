@@ -16,6 +16,11 @@
             font-family: Arial, sans-serif;
         }
 
+        .navbar-light .navbar-text {
+            font-weight: bold;
+            color: #1b1e21;
+        }
+
         .navbar-brand {
             font-family:"Oswald";
             font-style: normal;
@@ -143,6 +148,12 @@
             box-sizing: border-box;
             }
 
+        .btn-excel {
+        
+            color: white;
+            background-color: #28a745;
+        }
+
         @media (max-width: 991px) {
 
             .navbar-brand {
@@ -199,6 +210,11 @@
                 </span>
             </div>
             <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a href="https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=2c93808494d5e4f40194ddd6ed780530" class="btn btn-success mr-2" id="subscribe-button">
+                        <i class="fas fa-crown"></i> Pagar Suscripción
+                    </a>
+                </li>
                 <li class="nav-item">
                     <button id="toggle-theme" class="btn btn-secondary mr-2">
                         <i class="fas fa-sun"></i> <span class="theme-text">Modo Día</span>
@@ -320,7 +336,7 @@
 
             <div class="fixed-buttons text-center">
                 <button id="clear-list" class="btn btn-danger">Limpiar Lista</button>
-                <button id="export-excel" class="btn btn-success">Descargar en Excel</button>
+                <button id="export-excel" class="btn btn-excel">Exportar a Excel</button>
             </div>
         </div>
     </div>
@@ -341,8 +357,8 @@
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+
 
 <!-- Firebase v9 -->
 <script type="module">
@@ -532,6 +548,7 @@
     </script>
 
 -->
-</body>
+    
 <script type="module" src="./app.js"></script>
+</body>
 </html>
