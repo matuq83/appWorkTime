@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import {
   getFirestore,
@@ -189,6 +190,35 @@ $(function () {
     }
   });
 
+  // Recuperar contraseña
+$("#forgot-password").on("click", async function () {
+    const email = $("#login-email").val();
+    if (!email) {
+      return Swal.fire({
+        icon: "info",
+        title: "Ingrese su email",
+        text: "Por favor escribí tu email en el campo correspondiente para poder enviar el enlace de recuperación.",
+      });
+    }
+  
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Swal.fire({
+        icon: "success",
+        title: "Correo enviado",
+        text: "Te enviamos un enlace para restablecer tu contraseña.",
+      });
+    } catch (error) {
+      console.error("Error al enviar correo de recuperación:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message,
+      });
+    }
+  });
+  
+
   // Cargar jornadas
   async function loadUserData(userId) {
     try {
@@ -328,4 +358,61 @@ $(function () {
   backToTopButton.on("click", function () {
     $("html, body").animate({ scrollTop: 0 }, 500);
   });
+  // Exportar a Excel
+function exportToExcel(data) {
+    if (!data || data.length === 0) {
+      alert("No hay datos para exportar.");
+      return;
+    }
+  
+    try {
+      const excelData = [
+        ["Fecha", "Hora de Ingreso", "Hora de Egreso", "Horas Totales"],
+      ];
+  
+      data.forEach((record) => {
+        excelData.push([
+          record.date,
+          record.startTime,
+          record.endTime,
+          record.hoursWorked,
+        ]);
+      });
+  
+      const totalHoras = data
+        .reduce((sum, record) => sum + parseFloat(record.hoursWorked), 0)
+        .toFixed(2);
+  
+      excelData.push([]);
+      excelData.push(["Total Jornadas:", data.length]);
+      excelData.push(["Total Horas:", totalHoras]);
+  
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
+      ws["!cols"] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+  
+      XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
+  
+      const nombreUsuario = $("#username")
+        .text()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+      const nombreArchivo = `jornadas_${nombreUsuario || "usuario"}.xlsx`;
+  
+      XLSX.writeFile(wb, nombreArchivo);
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error);
+      alert("Error al exportar los datos.");
+    }
+  }
+  
+  // Listener botón exportar
+  $("#export-excel").on("click", function () {
+    exportToExcel(workData);
+  });
+  
+  const fechaHoy = new Date().toISOString().split("T")[0];
+  const nombreArchivo = `jornadas_${nombreUsuario}_${fechaHoy}.xlsx`;
 });
+
+
