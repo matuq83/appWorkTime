@@ -189,6 +189,12 @@ $(function () {
       alert("Error al cerrar sesión: " + error.message);
     }
   });
+  //Boton voler al Iniciar sesion
+  $("#back-to-login").on("click", function () {
+    registerPage.addClass("d-none");
+    loginPage.removeClass("d-none");
+  });
+  
 
   // Recuperar contraseña
 $("#forgot-password").on("click", async function () {
