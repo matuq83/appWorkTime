@@ -358,32 +358,7 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-
-
-<!-- Firebase v9 -->
-<script type="module">
-    // Importa las funciones necesarias desde Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-    import { getDatabase } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
-
-    // Tu configuración de Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
-        authDomain: "work-time-app-mq.firebaseapp.com",
-        projectId: "work-time-app-mq",
-        storageBucket: "work-time-app-mq.firebasestorage.app",
-        messagingSenderId: "627385644653",
-        appId: "1:627385644653:web:bc22287f25b39fabf93164"
-    };
-
-    // Inicializa Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);  // Autenticación de Firebase
-    const db = getDatabase(app); // Base de datos de Firebase
-</script>
-
-<script type="module" src="./app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>

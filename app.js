@@ -1,8 +1,4 @@
 // Firebase configuration and initialization
-import {
-    getFunctions,
-    httpsCallable,
-  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import {
   getAuth,
@@ -24,7 +20,10 @@ import {
   setDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
+import {
+  getFunctions,
+  httpsCallable,
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
@@ -55,6 +54,10 @@ $(function () {
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      // 🔍 Verificamos si tiene email
+      console.log("🟢 Usuario autenticado:", user);
+      console.log("📧 Email del usuario:", user.email);
+
       const verificarSuscripcion = httpsCallable(
         functions,
         "verificarSuscripcion"
@@ -63,6 +66,11 @@ $(function () {
       if (user.email !== "mathiasq.mq@gmail.com") {
         try {
           const result = await verificarSuscripcion({ email: user.email });
+          console.log(
+            "🔄 Resultado de la función verificarSuscripcion:",
+            result
+          );
+
           if (!result.data.suscripcionActiva) {
             Swal.fire({
               icon: "warning",
@@ -82,10 +90,11 @@ $(function () {
             return;
           }
         } catch (error) {
-          console.error("Error al verificar suscripción:", error);
+          console.error("❌ Error al verificar suscripción:", error);
         }
       }
 
+      // Mostrar interfaz
       loginPage.addClass("d-none");
       workRecords.removeClass("d-none");
       welcomeText.removeClass("d-none");
@@ -106,6 +115,7 @@ $(function () {
         usernameSpan.text("Usuario");
       }
     } else {
+      // Usuario no logueado
       workRecords.addClass("d-none");
       loginPage.removeClass("d-none");
       welcomeText.addClass("d-none");
@@ -149,15 +159,16 @@ $(function () {
         password
       );
       const user = userCredential.user;
-
-      // Save additional user information
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
         sector,
         email,
+        suscripcion: {
+          activa: true,
+          ultimaFechaPago: new Date().toISOString(),
+        },
       });
-
       alert("Usuario registrado con éxito.");
       registerPage.addClass("d-none");
       loginPage.removeClass("d-none");
@@ -167,261 +178,153 @@ $(function () {
     }
   });
 
-  // Handle Logout
+  // Logout
   $("#logout").on("click", async function () {
     try {
       await signOut(auth);
       workData = [];
-      updateWorkTable(); // Limpiar la tabla al cerrar sesión
+      updateWorkTable();
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
       alert("Error al cerrar sesión: " + error.message);
     }
   });
 
-  // Add Work Record
+  // Cargar jornadas
+  async function loadUserData(userId) {
+    try {
+      const ref = collection(db, `users/${userId}/workRecords`);
+      const q = query(ref, orderBy("date"));
+      const snapshot = await getDocs(q);
+
+      workData = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      updateWorkTable();
+    } catch (err) {
+      console.error("Error al cargar datos:", err);
+    }
+  }
+
+  // Formulario de jornada
   $("#work-form").on("submit", async function (e) {
     e.preventDefault();
     const date = $("#work-date").val();
-    const startTime = $("#start-time").val();
-    const endTime = $("#end-time").val();
+    const start = $("#start-time").val();
+    const end = $("#end-time").val();
+    const hoursWorked = calculateHours(start, end);
 
-    if (startTime >= endTime) {
-      alert("La hora de ingreso debe ser menor a la hora de egreso.");
-      return;
-    }
-
-    // Prevent duplicate entries
-    if (
-      workData.some(
-        (item) =>
-          item.date === date &&
-          item.startTime === startTime &&
-          item.endTime === endTime &&
-          editingIndex === -1
-      )
-    ) {
-      alert("Ya existe una jornada con estas horas.");
-      return;
-    }
-
-    const hoursWorked = calculateHours(startTime, endTime);
-    const record = { date, startTime, endTime, hoursWorked };
+    if (start >= end)
+      return alert("La hora de ingreso debe ser menor a la hora de egreso.");
 
     const user = auth.currentUser;
     if (!user) return;
 
+    const record = { date, startTime: start, endTime: end, hoursWorked };
+
     try {
       if (editingIndex >= 0) {
-        // Update existing record
         await updateDoc(
           doc(db, `users/${user.uid}/workRecords/${workData[editingIndex].id}`),
           record
         );
         editingIndex = -1;
       } else {
-        // Add new record
         await addDoc(collection(db, `users/${user.uid}/workRecords`), record);
       }
-
-      await loadUserData(user.uid); // Recargar los datos después de agregar/actualizar un registro
-      $("#work-form")[0].reset(); // Limpiar el formulario
+      await loadUserData(user.uid);
+      $("#work-form")[0].reset();
     } catch (error) {
-      console.error("Error saving record:", error);
       alert("Error al guardar el registro: " + error.message);
     }
   });
 
-  // Edit Work Record
+  // Editar jornada
   $(document).on("click", ".edit-button", function () {
-    const recordId = $(this).data("id");
-    editingIndex = workData.findIndex((item) => item.id === recordId);
-    const record = workData[editingIndex];
-
+    const id = $(this).data("id");
+    const record = workData.find((r) => r.id === id);
+    editingIndex = workData.findIndex((r) => r.id === id);
     $("#work-date").val(record.date);
     $("#start-time").val(record.startTime);
     $("#end-time").val(record.endTime);
   });
 
-  // Delete Work Record
+  // Eliminar jornada
   $(document).on("click", ".delete-button", async function () {
+    const id = $(this).data("id");
     const user = auth.currentUser;
     if (!user) return;
-
-    const recordId = $(this).data("id");
-
     try {
-      await deleteDoc(doc(db, `users/${user.uid}/workRecords/${recordId}`));
-      await loadUserData(user.uid); // Recargar los datos después de eliminar el registro
-    } catch (error) {
-      console.error("Error deleting record:", error);
-      alert("Error al eliminar el registro: " + error.message);
+      await deleteDoc(doc(db, `users/${user.uid}/workRecords/${id}`));
+      await loadUserData(user.uid);
+    } catch (err) {
+      alert("Error al eliminar registro: " + err.message);
     }
   });
 
-  // Update Work Table
-  function updateWorkTable() {
-    const tbody = $("#work-table").empty(); // Limpiar la tabla antes de llenarla
-    let totalHours = 0;
-
-    workData.forEach((item) => {
-      totalHours += parseFloat(item.hoursWorked);
-      tbody.append(`
-                <tr>
-                    <td>${item.date}</td>
-                    <td>${item.startTime}</td>
-                    <td>${item.endTime}</td>
-                    <td>${item.hoursWorked}</td>
-                    <td>
-                        <button class="btn btn-warning edit-button" data-id="${item.id}">Editar</button>
-                        <button class="btn btn-danger delete-button" data-id="${item.id}">Eliminar</button>
-                    </td>
-                </tr>
-            `);
-    });
-
-    $("#total-jornadas").text(workData.length); // Mostrar el número de registros
-    $("#total-horas").text(totalHours.toFixed(2)); // Mostrar las horas totales
-  }
-
-  // Calculate Hours
-  function calculateHours(startTime, endTime) {
-    const [startHours, startMinutes] = startTime.split(":").map(Number);
-    const [endHours, endMinutes] = endTime.split(":").map(Number);
-
-    let diff = endHours + endMinutes / 60 - (startHours + startMinutes / 60);
-    return diff.toFixed(2);
-  }
-
-  // Clear Work Records (Delete all)
+  // Vaciar todas
   $("#clear-list").on("click", async function () {
     const user = auth.currentUser;
     if (!user) return;
+    const ref = collection(db, `users/${user.uid}/workRecords`);
+    const snapshot = await getDocs(ref);
+    snapshot.forEach((doc) => deleteDoc(doc.ref));
+    await loadUserData(user.uid);
+  });
+
+  // Calcular horas
+  function calculateHours(start, end) {
+    const [sh, sm] = start.split(":"),
+      [eh, em] = end.split(":");
+    return (+eh + +em / 60 - (+sh + +sm / 60)).toFixed(2);
+  }
+
+  // Mostrar tabla
+  function updateWorkTable() {
+    const tbody = $("#work-table").empty();
+    let total = 0;
+    workData.forEach((item) => {
+      total += parseFloat(item.hoursWorked);
+      tbody.append(`
+        <tr>
+          <td>${item.date}</td>
+          <td>${item.startTime}</td>
+          <td>${item.endTime}</td>
+          <td>${item.hoursWorked}</td>
+          <td>
+            <button class="btn btn-warning edit-button" data-id="${item.id}">Editar</button>
+            <button class="btn btn-danger delete-button" data-id="${item.id}">Eliminar</button>
+          </td>
+        </tr>
+      `);
+    });
+    $("#total-jornadas").text(workData.length);
+    $("#total-horas").text(total.toFixed(2));
+  }
+
+  // Activar suscripción manualmente
+  $("#activar-suscripcion").on("click", async function () {
+    const user = auth.currentUser;
+    if (!user) return;
 
     try {
-      const workRecordsRef = collection(db, `users/${user.uid}/workRecords`);
-      const querySnapshot = await getDocs(workRecordsRef);
-
-      querySnapshot.forEach((doc) => {
-        deleteDoc(doc.ref);
+      await updateDoc(doc(db, "users", user.uid), {
+        suscripcion: {
+          activa: true,
+          ultimaFechaPago: new Date().toISOString(),
+        },
       });
-
-      await loadUserData(user.uid); // Recargar los datos después de limpiar
-    } catch (error) {
-      console.error("Error clearing records:", error);
-      alert("Error al limpiar los registros: " + error.message);
+      Swal.fire("Suscripción activada (modo prueba)", "", "success");
+    } catch (err) {
+      console.error("Error al activar suscripción manual:", err);
     }
   });
 
-  // Exportar a Excel
-  function exportToExcel(data) {
-    if (!data || data.length === 0) {
-      alert("No hay datos para exportar.");
-      return;
-    }
-
-    try {
-      // Crear los datos para Excel
-      const excelData = [
-        ["Fecha", "Hora de Ingreso", "Hora de Egreso", "Horas Totales"], // Headers
-      ];
-
-      // Agregar los datos
-      data.forEach((record) => {
-        excelData.push([
-          record.date,
-          record.startTime,
-          record.endTime,
-          record.hoursWorked,
-        ]);
-      });
-
-      // Calcular total de horas
-      const totalHoras = data
-        .reduce((sum, record) => sum + parseFloat(record.hoursWorked), 0)
-        .toFixed(2);
-
-      // Agregar línea en blanco y totales
-      excelData.push([]); // Línea en blanco
-      excelData.push(["Total Jornadas:", data.length]);
-      excelData.push(["Total Horas:", totalHoras]);
-
-      // Crear libro de trabajo
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-      // Ajustar anchos de columna
-      const wscols = [
-        { wch: 15 }, // A
-        { wch: 15 }, // B
-        { wch: 15 }, // C
-        { wch: 15 }, // D
-      ];
-      ws["!cols"] = wscols;
-
-      // Agregar la hoja al libro
-      XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
-
-      // Guardar el archivo
-      XLSX.writeFile(wb, "jornadas_trabajadas.xlsx");
-    } catch (error) {
-      console.error("Error al exportar:", error);
-      alert("Error al exportar a Excel: " + error.message);
-    }
-  }
-
-  // 3. Agregar el event listener para el botón de exportación
-  document
-    .getElementById("export-excel")
-    .addEventListener("click", function () {
-      exportToExcel(workData);
-    });
-
-  // 4. Función auxiliar para verificar que XLSX esté cargado
-  function waitForXLSX(callback, maxAttempts = 10) {
-    let attempts = 0;
-
-    const checkXLSX = () => {
-      attempts++;
-      if (typeof XLSX !== "undefined") {
-        callback();
-      } else if (attempts < maxAttempts) {
-        setTimeout(checkXLSX, 100);
-      } else {
-        console.error("No se pudo cargar la librería XLSX");
-        alert(
-          "Error: No se pudo cargar el exportador de Excel. Por favor, recarga la página."
-        );
-      }
-    };
-
-    checkXLSX();
-  }
-
-  // 5. Usar la función de espera
-  document
-    .getElementById("export-excel")
-    .addEventListener("click", function () {
-      waitForXLSX(() => {
-        exportToExcel(workData);
-      });
-    });
-
-  // 6. Para debugging
-  window.addEventListener("load", function () {
-    console.log("XLSX disponible:", typeof XLSX !== "undefined");
-    console.log("jQuery disponible:", typeof jQuery !== "undefined");
-    console.log("workData disponible:", typeof workData !== "undefined");
-  });
-  // Theme Toggle
+  // Tema oscuro
   toggleThemeButton.on("click", function () {
     $("body").toggleClass("dark-mode");
-    const themeText = $("body").hasClass("dark-mode")
-      ? "Modo Noche"
-      : "Modo Día";
-    toggleThemeButton.find(".theme-text").text(themeText);
+    const txt = $("body").hasClass("dark-mode") ? "Modo Noche" : "Modo Día";
+    toggleThemeButton.find(".theme-text").text(txt);
   });
 
+  // Botón scroll top
   backToTopButton.on("click", function () {
     $("html, body").animate({ scrollTop: 0 }, 500);
   });
