@@ -56,41 +56,66 @@ $(function () {
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      console.log("🟢 Usuario autenticado:", user);
+      console.log("📧 Email del usuario:", user.email);
+  
       const verificarSuscripcion = httpsCallable(functions, "verificarSuscripcion");
       const adminEmails = ["mathiasq.mq@gmail.com", "shaiel.quintana2504@gmail.com"];
-
+  
       if (!adminEmails.includes(user.email)) {
-        try {
-          const result = await verificarSuscripcion({ email: user.email });
-          if (!result.data.suscripcionActiva) {
+        if (!user.email) {
+          console.error("❌ No se pudo obtener el email del usuario.");
+          Swal.fire({
+            icon: "error",
+            title: "Error de autenticación",
+            text: "No se pudo obtener tu correo electrónico. Intenta cerrar sesión y volver a ingresar.",
+          });
+          signOut(auth);
+          return;
+        }
+  
+        setTimeout(async () => {
+          try {
+            const result = await verificarSuscripcion({ email: user.email });
+            console.log("📩 Resultado verificación:", result.data);
+  
+            if (!result.data.suscripcionActiva) {
+              Swal.fire({
+                icon: "warning",
+                title: "Suscripción requerida",
+                html: `Tu cuenta está inactiva o suspendida.<br>Necesitás una suscripción activa para acceder a la app.`,
+                confirmButtonText: "Abonar ahora",
+                showCancelButton: true,
+                cancelButtonText: "Cerrar sesión",
+              }).then((r) => {
+                if (r.isConfirmed) {
+                  window.location.href =
+                    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=2c93808494d5e4f40194ddd6ed780530";
+                } else {
+                  signOut(auth);
+                }
+              });
+              return;
+            }
+          } catch (error) {
+            console.error("❌ Error al verificar suscripción:", error);
             Swal.fire({
-              icon: "warning",
-              title: "Suscripción requerida",
-              html: `Tu cuenta está inactiva o suspendida.<br>Necesitás una suscripción activa para acceder a la app.`,
-              confirmButtonText: "Abonar ahora",
-              showCancelButton: true,
-              cancelButtonText: "Cerrar sesión",
-            }).then((r) => {
-              if (r.isConfirmed) {
-                window.location.href =
-                  "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=2c93808494d5e4f40194ddd6ed780530";
-              } else {
-                signOut(auth);
-              }
+              icon: "error",
+              title: "Problemas de Suscripción",
+              text: "Hubo un problema al verificar tu suscripción. Verifica que tu Pago mensual este realizado,o Realiza tu Pago haciendo click en el BOTON PAGAR SUSCRIPCIÓN",
             });
             return;
           }
-        } catch (error) {
-          console.error("❌ Error al verificar suscripción:", error);
-        }
+        }, 500); // Espera 500ms para asegurarse de que el email esté disponible
       }
-
+  
+      // Mostrar interfaz principal
       loginPage.addClass("d-none");
       workRecords.removeClass("d-none");
       welcomeText.removeClass("d-none");
       logoutButton.removeClass("d-none");
       backToTopButton.show();
-
+  
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
@@ -109,13 +134,14 @@ $(function () {
         window.nombreUsuario = "usuario";
       }
     } else {
+      // Usuario no autenticado
       workRecords.addClass("d-none");
       loginPage.removeClass("d-none");
       welcomeText.addClass("d-none");
       logoutButton.addClass("d-none");
     }
   });
-
+  
   $("#login-form").on("submit", async function (e) {
     e.preventDefault();
     const email = $("#login-email").val();

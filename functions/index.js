@@ -51,7 +51,7 @@ if (admins.includes(userData.email)) continue;
 );
 
 // ☑️ Endpoint callable para verificar suscripción
-exports.verificarSuscripcion = onCall(async (data, context) => {
+exports.verificarSuscripcion = functions.https.onCall(async (data, context) => {
   const email = data.email;
 
   if (!email) {
