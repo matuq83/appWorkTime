@@ -286,6 +286,23 @@ $(function () {
     }
   }
 
+  // Tema oscuro
+toggleThemeButton.on("click", function () {
+  $("body").toggleClass("dark-mode");
+  const txt = $("body").hasClass("dark-mode") ? "Modo Noche" : "Modo Día";
+  toggleThemeButton.find(".theme-text").text(txt);
+
+  // Guardar preferencia localmente
+  localStorage.setItem("modoOscuro", $("body").hasClass("dark-mode"));
+});
+
+// Restaurar modo oscuro al cargar
+if (localStorage.getItem("modoOscuro") === "true") {
+  $("body").addClass("dark-mode");
+  toggleThemeButton.find(".theme-text").text("Modo Noche");
+}
+
+
   function exportToExcel(data) {
     if (!data || data.length === 0) {
       Swal.fire({
