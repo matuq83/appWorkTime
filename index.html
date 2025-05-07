@@ -371,9 +371,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- EmailJS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
-<script>
-  emailjs.init("service_ybtpgqey"); // reemplazá con tu PUBLIC KEY (NO el service_id)
+<script type="text/javascript">
+    (function(){
+      emailjs.init("service_ybtpgqey"); // tu PUBLIC KEY de EmailJS
+    })();
 </script>
+
 <script type="module" src="./app.js"></script>
 </body>
 </html>
