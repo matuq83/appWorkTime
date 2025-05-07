@@ -19,12 +19,13 @@ import {
   query,
   orderBy,
   setDoc,
-  getDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import {
   getFunctions,
-  httpsCallable,
+  httpsCallable
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
+import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.19.3/package/xlsx.mjs";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAHo3oIecxPdMFJzUm9DJYPn-VS9cSNx9k",
@@ -55,23 +56,12 @@ $(function () {
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // 🔍 Verificamos si tiene email
-      console.log("🟢 Usuario autenticado:", user);
-      console.log("📧 Email del usuario:", user.email);
+      const verificarSuscripcion = httpsCallable(functions, "verificarSuscripcion");
+      const adminEmails = ["mathiasq.mq@gmail.com", "shaiel.quintana2504@gmail.com"];
 
-      const verificarSuscripcion = httpsCallable(
-        functions,
-        "verificarSuscripcion"
-      );
-
-      if (user.email !== "mathiasq.mq@gmail.com") {
+      if (!adminEmails.includes(user.email)) {
         try {
           const result = await verificarSuscripcion({ email: user.email });
-          console.log(
-            "🔄 Resultado de la función verificarSuscripcion:",
-            result
-          );
-
           if (!result.data.suscripcionActiva) {
             Swal.fire({
               icon: "warning",
@@ -95,7 +85,6 @@ $(function () {
         }
       }
 
-      // Mostrar interfaz
       loginPage.addClass("d-none");
       workRecords.removeClass("d-none");
       welcomeText.removeClass("d-none");
@@ -106,17 +95,20 @@ $(function () {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          usernameSpan.text(userData.firstName || "Usuario");
+          const nombre = userData.firstName || "Usuario";
+          usernameSpan.text(nombre);
+          window.nombreUsuario = nombre.toLowerCase();
         } else {
           usernameSpan.text("Usuario");
+          window.nombreUsuario = "usuario";
         }
         await loadUserData(user.uid);
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
         usernameSpan.text("Usuario");
+        window.nombreUsuario = "usuario";
       }
     } else {
-      // Usuario no logueado
       workRecords.addClass("d-none");
       loginPage.removeClass("d-none");
       welcomeText.addClass("d-none");
@@ -124,27 +116,18 @@ $(function () {
     }
   });
 
-  // Show Register Page
-  $("#register-btn").on("click", function () {
-    loginPage.addClass("d-none");
-    registerPage.removeClass("d-none");
-  });
-
-  // Handle Login
   $("#login-form").on("submit", async function (e) {
     e.preventDefault();
     const email = $("#login-email").val();
     const password = $("#login-password").val();
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
       $("#login-form")[0].reset();
     } catch (error) {
-      alert("Error de inicio de sesión: " + error.message);
+      Swal.fire({ icon: "error", title: "Error al iniciar sesión", text: error.message });
     }
   });
 
-  // Handle Registration
   $("#register-form").on("submit", async function (e) {
     e.preventDefault();
     const email = $("#email").val();
@@ -154,11 +137,7 @@ $(function () {
     const sector = $("#sector").val();
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
         firstName,
@@ -170,34 +149,79 @@ $(function () {
           ultimaFechaPago: new Date().toISOString(),
         },
       });
-      alert("Usuario registrado con éxito.");
+      Swal.fire({ icon: "success", title: "Registro exitoso", text: "Usuario creado correctamente." });
       registerPage.addClass("d-none");
       loginPage.removeClass("d-none");
       $("#register-form")[0].reset();
     } catch (error) {
-      alert("Error de registro: " + error.message);
+      Swal.fire({ icon: "error", title: "Error al registrarse", text: error.message });
     }
   });
 
-  // Logout
   $("#logout").on("click", async function () {
     try {
       await signOut(auth);
       workData = [];
       updateWorkTable();
     } catch (error) {
-      alert("Error al cerrar sesión: " + error.message);
+      Swal.fire({ icon: "error", title: "Error al cerrar sesión", text: error.message });
     }
   });
-  //Boton voler al Iniciar sesion
-  $("#back-to-login").on("click", function () {
-    registerPage.addClass("d-none");
-    loginPage.removeClass("d-none");
-  });
-  
 
-  // Recuperar contraseña
-$("#forgot-password").on("click", async function () {
+  $("#work-form").on("submit", async function (e) {
+    e.preventDefault();
+    const date = $("#work-date").val();
+    const start = $("#start-time").val();
+    const end = $("#end-time").val();
+
+    if (start >= end) {
+      Swal.fire({ icon: "warning", title: "Horario inválido", text: "La hora de ingreso debe ser anterior a la de egreso." });
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) return;
+    const hoursWorked = calculateHours(start, end);
+    const record = { date, startTime: start, endTime: end, hoursWorked };
+
+    try {
+      if (editingIndex >= 0) {
+        await updateDoc(doc(db, `users/${user.uid}/workRecords/${workData[editingIndex].id}`), record);
+        editingIndex = -1;
+      } else {
+        await addDoc(collection(db, `users/${user.uid}/workRecords`), record);
+      }
+      await loadUserData(user.uid);
+      $("#work-form")[0].reset();
+    } catch (error) {
+      Swal.fire({ icon: "error", title: "Error al guardar", text: error.message });
+    }
+  });
+
+  $(document).on("click", ".delete-button", async function () {
+    const id = $(this).data("id");
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, `users/${user.uid}/workRecords/${id}`));
+      await loadUserData(user.uid);
+      Swal.fire({ icon: "success", title: "Registro eliminado", text: "La jornada ha sido eliminada correctamente." });
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Error al eliminar", text: err.message });
+    }
+  });
+
+  $("#clear-list").on("click", async function () {
+    const user = auth.currentUser;
+    if (!user) return;
+    const ref = collection(db, `users/${user.uid}/workRecords`);
+    const snapshot = await getDocs(ref);
+    snapshot.forEach((doc) => deleteDoc(doc.ref));
+    await loadUserData(user.uid);
+    Swal.fire({ icon: "success", title: "Lista limpiada", text: "Todos los registros fueron eliminados." });
+  });
+
+  $("#forgot-password").on("click", async function () {
     const email = $("#login-email").val();
     if (!email) {
       return Swal.fire({
@@ -206,7 +230,7 @@ $("#forgot-password").on("click", async function () {
         text: "Por favor escribí tu email en el campo correspondiente para poder enviar el enlace de recuperación.",
       });
     }
-  
+
     try {
       await sendPasswordResetEmail(auth, email);
       Swal.fire({
@@ -215,7 +239,6 @@ $("#forgot-password").on("click", async function () {
         text: "Te enviamos un enlace para restablecer tu contraseña.",
       });
     } catch (error) {
-      console.error("Error al enviar correo de recuperación:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -223,96 +246,12 @@ $("#forgot-password").on("click", async function () {
       });
     }
   });
-  
 
-  // Cargar jornadas
-  async function loadUserData(userId) {
-    try {
-      const ref = collection(db, `users/${userId}/workRecords`);
-      const q = query(ref, orderBy("date"));
-      const snapshot = await getDocs(q);
-
-      workData = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-      updateWorkTable();
-    } catch (err) {
-      console.error("Error al cargar datos:", err);
-    }
-  }
-
-  // Formulario de jornada
-  $("#work-form").on("submit", async function (e) {
-    e.preventDefault();
-    const date = $("#work-date").val();
-    const start = $("#start-time").val();
-    const end = $("#end-time").val();
-    const hoursWorked = calculateHours(start, end);
-
-    if (start >= end)
-      return alert("La hora de ingreso debe ser menor a la hora de egreso.");
-
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const record = { date, startTime: start, endTime: end, hoursWorked };
-
-    try {
-      if (editingIndex >= 0) {
-        await updateDoc(
-          doc(db, `users/${user.uid}/workRecords/${workData[editingIndex].id}`),
-          record
-        );
-        editingIndex = -1;
-      } else {
-        await addDoc(collection(db, `users/${user.uid}/workRecords`), record);
-      }
-      await loadUserData(user.uid);
-      $("#work-form")[0].reset();
-    } catch (error) {
-      alert("Error al guardar el registro: " + error.message);
-    }
-  });
-
-  // Editar jornada
-  $(document).on("click", ".edit-button", function () {
-    const id = $(this).data("id");
-    const record = workData.find((r) => r.id === id);
-    editingIndex = workData.findIndex((r) => r.id === id);
-    $("#work-date").val(record.date);
-    $("#start-time").val(record.startTime);
-    $("#end-time").val(record.endTime);
-  });
-
-  // Eliminar jornada
-  $(document).on("click", ".delete-button", async function () {
-    const id = $(this).data("id");
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await deleteDoc(doc(db, `users/${user.uid}/workRecords/${id}`));
-      await loadUserData(user.uid);
-    } catch (err) {
-      alert("Error al eliminar registro: " + err.message);
-    }
-  });
-
-  // Vaciar todas
-  $("#clear-list").on("click", async function () {
-    const user = auth.currentUser;
-    if (!user) return;
-    const ref = collection(db, `users/${user.uid}/workRecords`);
-    const snapshot = await getDocs(ref);
-    snapshot.forEach((doc) => deleteDoc(doc.ref));
-    await loadUserData(user.uid);
-  });
-
-  // Calcular horas
   function calculateHours(start, end) {
-    const [sh, sm] = start.split(":"),
-      [eh, em] = end.split(":");
+    const [sh, sm] = start.split(":"), [eh, em] = end.split(":");
     return (+eh + +em / 60 - (+sh + +sm / 60)).toFixed(2);
   }
 
-  // Mostrar tabla
   function updateWorkTable() {
     const tbody = $("#work-table").empty();
     let total = 0;
@@ -335,39 +274,25 @@ $("#forgot-password").on("click", async function () {
     $("#total-horas").text(total.toFixed(2));
   }
 
-  // Activar suscripción manualmente
-  $("#activar-suscripcion").on("click", async function () {
-    const user = auth.currentUser;
-    if (!user) return;
-
+  async function loadUserData(userId) {
     try {
-      await updateDoc(doc(db, "users", user.uid), {
-        suscripcion: {
-          activa: true,
-          ultimaFechaPago: new Date().toISOString(),
-        },
-      });
-      Swal.fire("Suscripción activada (modo prueba)", "", "success");
+      const ref = collection(db, `users/${userId}/workRecords`);
+      const q = query(ref, orderBy("date"));
+      const snapshot = await getDocs(q);
+      workData = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      updateWorkTable();
     } catch (err) {
-      console.error("Error al activar suscripción manual:", err);
+      console.error("Error al cargar datos:", err);
     }
-  });
+  }
 
-  // Tema oscuro
-  toggleThemeButton.on("click", function () {
-    $("body").toggleClass("dark-mode");
-    const txt = $("body").hasClass("dark-mode") ? "Modo Noche" : "Modo Día";
-    toggleThemeButton.find(".theme-text").text(txt);
-  });
-
-  // Botón scroll top
-  backToTopButton.on("click", function () {
-    $("html, body").animate({ scrollTop: 0 }, 500);
-  });
-  // Exportar a Excel
-function exportToExcel(data) {
+  function exportToExcel(data) {
     if (!data || data.length === 0) {
-      alert("No hay datos para exportar.");
+      Swal.fire({
+        icon: "info",
+        title: "Sin datos",
+        text: "No hay datos para exportar.",
+      });
       return;
     }
   
@@ -399,26 +324,23 @@ function exportToExcel(data) {
   
       XLSX.utils.book_append_sheet(wb, ws, "Jornadas");
   
-      const nombreUsuario = $("#username")
-        .text()
-        .toLowerCase()
-        .replace(/\s+/g, "_");
-      const nombreArchivo = `jornadas_${nombreUsuario || "usuario"}.xlsx`;
+      const nombreUsuario = $("#username").text().toLowerCase().replace(/\s+/g, "_");
+      const fechaHoy = new Date().toISOString().split("T")[0];
+      const nombreArchivo = `jornadas_${nombreUsuario || "usuario"}_${fechaHoy}.xlsx`;
   
       XLSX.writeFile(wb, nombreArchivo);
     } catch (error) {
       console.error("Error al exportar a Excel:", error);
-      alert("Error al exportar los datos.");
+      Swal.fire({
+        icon: "error",
+        title: "Error al exportar",
+        text: "No se pudo generar el archivo Excel.",
+      });
     }
   }
   
-  // Listener botón exportar
   $("#export-excel").on("click", function () {
     exportToExcel(workData);
   });
   
-  const fechaHoy = new Date().toISOString().split("T")[0];
-  const nombreArchivo = `jornadas_${nombreUsuario}_${fechaHoy}.xlsx`;
 });
-
-
