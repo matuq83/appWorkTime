@@ -132,7 +132,7 @@
             text-align: center;
             margin-top: 30px;
         }
-
+        
         .navbar-brand img {
             width: 40px;
             height: 40px;
@@ -219,6 +219,9 @@
                     <button id="toggle-theme" class="btn btn-secondary mr-2">
                         <i class="fas fa-sun"></i> <span class="theme-text">Modo Día</span>
                     </button>
+                </li>
+                <li class="nav-item">
+                    <button id="btnContacto" class="btn btn-info">📩 Contactar Soporte</button>
                 </li>
                 <li class="nav-item">
                     <button id="logout" class="btn btn-danger d-none">Cerrar Sesión</button>
@@ -366,6 +369,11 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+<script>
+  emailjs.init("service_ybtpgqey"); // reemplazá con tu PUBLIC KEY (NO el service_id)
+</script>
 <script type="module" src="./app.js"></script>
 </body>
 </html>

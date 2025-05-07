@@ -385,5 +385,47 @@ if (localStorage.getItem("modoOscuro") === "true") {
   $("#export-excel").on("click", function () {
     exportToExcel(workData);
   });
+
+
+  //Soporte botton
+  $(document).on("click", "#btnContacto", function () {
+    Swal.fire({
+      title: 'Contacto',
+      html: `
+      <input type="text" id="nombre" class="swal2-input" placeholder="Tu nombre">
+      <input type="email" id="email" class="swal2-input" placeholder="Tu correo">
+      <input type="text" id="titulo" class="swal2-input" placeholder="Asunto">
+      <textarea id="mensaje" class="swal2-textarea" placeholder="Escribí tu mensaje aquí..."></textarea>
+    `,
+      confirmButtonText: 'Enviar',
+      focusConfirm: false,
+      preConfirm: () => {
+        const nombre = document.getElementById("nombre").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const titulo = document.getElementById("titulo").value.trim();
+        const mensaje = document.getElementById("mensaje").value.trim();
+  
+        if (!nombre || !email || !titulo || !mensaje) {
+          Swal.showValidationMessage("Todos los campos son obligatorios");
+          return false;
+        }
+  
+        return emailjs.send("service_ybtpgqe","template_afr43kp", {
+          titulo,
+          nombre,
+          email,
+          mensaje,
+        })
+        
+        .then(() => {
+          Swal.fire("✅ Enviado", "Tu mensaje fue enviado correctamente.", "success");
+        })
+        .catch((error) => {
+          console.error("Error al enviar:", error);
+          Swal.fire("❌ Error", "No se pudo enviar el mensaje. Intentalo más tarde.", "error");
+        });
+      }
+    });
+  });
   
 });
