@@ -392,11 +392,11 @@ if (localStorage.getItem("modoOscuro") === "true") {
     Swal.fire({
       title: 'Contacto',
       html: `
-      <input type="text" id="nombre" class="swal2-input" placeholder="Tu nombre">
-      <input type="email" id="email" class="swal2-input" placeholder="Tu correo">
-      <input type="text" id="titulo" class="swal2-input" placeholder="Asunto">
-      <textarea id="mensaje" class="swal2-textarea" placeholder="Escribí tu mensaje aquí..."></textarea>
-    `,
+        <input type="text" id="nombre" class="swal2-input" placeholder="Tu nombre">
+        <input type="email" id="email" class="swal2-input" placeholder="Tu correo">
+        <input type="text" id="titulo" class="swal2-input" placeholder="Asunto">
+        <textarea id="mensaje" class="swal2-textarea" placeholder="Escribí tu mensaje aquí..."></textarea>
+      `,
       confirmButtonText: 'Enviar',
       focusConfirm: false,
       preConfirm: () => {
@@ -410,13 +410,12 @@ if (localStorage.getItem("modoOscuro") === "true") {
           return false;
         }
   
-        return emailjs.send("service_ybtpgqe","template_afr43kp", {
-          titulo,
+        return emailjs.send("service_ybtpgqe", "template_afr43kp", {
           nombre,
           email,
-          mensaje,
+          titulo,
+          mensaje
         })
-        
         .then(() => {
           Swal.fire("✅ Enviado", "Tu mensaje fue enviado correctamente.", "success");
         })
