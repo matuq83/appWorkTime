@@ -154,6 +154,13 @@ $(function () {
     }
   });
 
+  // Mostrar formulario de registro
+$("#register-btn").on("click", function () {
+  $("#login-page").addClass("d-none");
+  $("#register-page").removeClass("d-none");
+});
+
+
   $("#register-form").on("submit", async function (e) {
     e.preventDefault();
     const email = $("#email").val();
@@ -193,6 +200,13 @@ $(function () {
       Swal.fire({ icon: "error", title: "Error al cerrar sesión", text: error.message });
     }
   });
+
+  // Volver al login desde el formulario de registro
+$("#back-to-login").on("click", function () {
+  $("#register-page").addClass("d-none");
+  $("#login-page").removeClass("d-none");
+});
+
 
   $("#work-form").on("submit", async function (e) {
     e.preventDefault();
@@ -236,6 +250,21 @@ $(function () {
       Swal.fire({ icon: "error", title: "Error al eliminar", text: err.message });
     }
   });
+
+  $(document).on("click", ".edit-button", function () {
+  const id = $(this).data("id");
+  const record = workData.find((r) => r.id === id);
+  if (!record) return;
+
+  // Rellenar el formulario con los datos existentes
+  $("#work-date").val(record.date);
+  $("#start-time").val(record.startTime);
+  $("#end-time").val(record.endTime);
+
+  // Establecer el índice de edición
+  editingIndex = workData.findIndex((r) => r.id === id);
+});
+
 
   $("#clear-list").on("click", async function () {
     const user = auth.currentUser;
@@ -388,43 +417,61 @@ if (localStorage.getItem("modoOscuro") === "true") {
 
 
   //Soporte botton
-  $(document).on("click", "#btnContacto", function () {
-    Swal.fire({
-      title: 'Contacto',
-      html: `
-        <input type="text" id="nombre" class="swal2-input" placeholder="Tu nombre">
-        <input type="email" id="email" class="swal2-input" placeholder="Tu correo">
-        <input type="text" id="titulo" class="swal2-input" placeholder="Asunto">
-        <textarea id="mensaje" class="swal2-textarea" placeholder="Escribí tu mensaje aquí..."></textarea>
-      `,
-      confirmButtonText: 'Enviar',
-      focusConfirm: false,
-      preConfirm: () => {
-        const nombre = document.getElementById("nombre").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const titulo = document.getElementById("titulo").value.trim();
-        const mensaje = document.getElementById("mensaje").value.trim();
-  
-        if (!nombre || !email || !titulo || !mensaje) {
-          Swal.showValidationMessage("Todos los campos son obligatorios");
-          return false;
-        }
-  
-        return emailjs.send("service_ybtpgqe", "template_afr43kp", {
-          nombre,
-          email,
-          titulo,
-          mensaje
-        })
-        .then(() => {
-          Swal.fire("✅ Enviado", "Tu mensaje fue enviado correctamente.", "success");
-        })
-        .catch((error) => {
-          console.error("Error al enviar:", error);
-          Swal.fire("❌ Error", "No se pudo enviar el mensaje. Intentalo más tarde.", "error");
-        });
+$(document).on("click", "#btnContacto", function () {
+  Swal.fire({
+    title: 'Contacto',
+    html: `
+      <input type="text" id="nombre" class="swal2-input" placeholder="Tu nombre">
+      <input type="email" id="email" class="swal2-input" placeholder="Tu correo">
+      <input type="text" id="titulo" class="swal2-input" placeholder="Asunto">
+      <textarea id="mensaje" class="swal2-textarea" placeholder="Escribí tu mensaje aquí..."></textarea>
+    `,
+    confirmButtonText: 'Enviar',
+    focusConfirm: false,
+    preConfirm: () => {
+      const nombre = document.getElementById("nombre").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const titulo = document.getElementById("titulo").value.trim();
+      const mensaje = document.getElementById("mensaje").value.trim();
+
+      if (!nombre || !email || !titulo || !mensaje) {
+        Swal.showValidationMessage("Todos los campos son obligatorios");
+        return false;
       }
-    });
+
+      return window.emailjs.send("service_ybtpgqe", "template_afr43kp", {
+        nombre,
+        email,
+        titulo,
+        mensaje,
+      })
+      .then(() => {
+        Swal.fire("✅ Enviado", "Tu mensaje fue enviado correctamente.", "success");
+      })
+      .catch((error) => {
+        console.error("Error al enviar:", error);
+        Swal.fire("❌ Error", "No se pudo enviar el mensaje. Intentalo más tarde.", "error");
+      });
+    }
   });
+});
+
+
+// Acción al hacer clic en el botón back top
+$(window).scroll(function () {
+  if ($(this).scrollTop() > 200) {
+    $("#back-to-top").fadeIn();
+  } else {
+    $("#back-to-top").fadeOut();
+  }
+});
+
+
+// Funcionalidad del botón back top
+$("#back-to-top").click(function () {
+  $("html, body").animate({ scrollTop: 0 }, "slow");
+  return false;
+});
+
   
 });

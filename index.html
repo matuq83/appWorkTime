@@ -120,8 +120,8 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            display: none;
             z-index: 1000;
+            display: none;
         }
 
         #back-to-top i {
@@ -369,14 +369,15 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- EmailJS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
-<script type="text/javascript">
-    (function(){
-      emailjs.init("service_ybtpgqey"); // tu PUBLIC KEY de EmailJS
-    })();
+
+<!-- EmailJS SDK v3 con módulo -->
+<script type="module">
+  import emailjs from 'https://cdn.emailjs.com/dist/email.min.mjs';
+  emailjs.init("zr18VCtjrJCgg2y1n");
+  window.emailjs = emailjs;
 </script>
 
 <script type="module" src="./app.js"></script>
+
 </body>
 </html>
