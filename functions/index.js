@@ -22,7 +22,7 @@ exports.controlarMorosidad = onSchedule(
       const userData = docSnap.data();
       const userId = docSnap.id;
 
-      const admins = ["mathiasq.mq@gmail.com", "shaiel.quintana2504@gmail.com"];
+      const admins = ["mathiasq.mq@gmail.com", "shaiel.quintana2504@gmail.com","ibanezvalery@hotmail.com"];
       if (admins.includes(userData.email)) continue;
 
       const suscripcion = userData.suscripcion || {};
