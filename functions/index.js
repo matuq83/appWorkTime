@@ -22,7 +22,7 @@ exports.controlarMorosidad = onSchedule(
       const userData = docSnap.data();
       const userId = docSnap.id;
 
-      const admins = ["mathiasq.mq@gmail.com", "shaiel.quintana2504@gmail.com","ibanezvalery@hotmail.com"];
+      const admins = ["mathiasq.mq@gmail.com", "shaiel.quintana2504@gmail.com"];
       if (admins.includes(userData.email)) continue;
 
       const suscripcion = userData.suscripcion || {};
@@ -73,6 +73,8 @@ exports.verificarSuscripcion = functions.https.onCall(async (data, context) => {
 
 // 🌐 Webhook de Mercado Pago para activar suscripción automáticamente
 exports.mercadoPagoWebhook = functions.https.onRequest(async (req, res) => {
+  console.log("🔔 Webhook recibido:", JSON.stringify(req.body, null, 2));
+  
   const { type, data } = req.body;
 
   if (type === "payment") {
@@ -80,6 +82,8 @@ exports.mercadoPagoWebhook = functions.https.onRequest(async (req, res) => {
     const token = functions.config().mercadopago.token;
 
     try {
+      console.log(`🔍 Consultando pago ID: ${paymentId}`);
+      
       const response = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -87,19 +91,43 @@ exports.mercadoPagoWebhook = functions.https.onRequest(async (req, res) => {
       });
 
       const pago = response.data;
-      const email = pago.payer.email;
+      console.log("💰 Datos del pago:", JSON.stringify(pago, null, 2));
+      
+      const email = pago.payer.email.toLowerCase().trim();
       const estado = pago.status;
 
+      console.log(`📧 Email: ${email}, Estado: ${estado}`);
+
       if (estado === "approved") {
-        const snapshot = await db.collection("users").where("email", "==", email).get();
+        const snapshot = await db.collection("users")
+          .where("email", "==", email)
+          .get();
+
         if (!snapshot.empty) {
           const docRef = snapshot.docs[0].ref;
-          await docRef.update({
-            "suscripcion.activa": true,
-            "suscripcion.ultimaFechaPago": new Date().toISOString(),
-          });
+          const userData = snapshot.docs[0].data();
+          const userId = snapshot.docs[0].id;
+          
+          console.log(`👤 Usuario encontrado: ${email} (UID: ${userId})`);
+          console.log(`📋 Datos actuales:`, userData);
+          
+          // AQUÍ ESTÁ EL ARREGLO: Usar set con merge para crear el campo si no existe
+          await docRef.set({
+            suscripcion: {
+              activa: true,
+              ultimaFechaPago: new Date().toISOString(),
+              pagoId: paymentId,
+              fechaActivacion: new Date().toISOString()
+            }
+          }, { merge: true }); // merge: true es clave - no sobrescribe, solo agrega/actualiza
+          
           console.log(`✅ Suscripción activada para ${email}`);
+          
+        } else {
+          console.log(`❌ Usuario no encontrado para email: ${email}`);
         }
+      } else {
+        console.log(`⏸️ Pago no aprobado. Estado: ${estado}`);
       }
 
       res.status(200).send("OK");
@@ -108,6 +136,7 @@ exports.mercadoPagoWebhook = functions.https.onRequest(async (req, res) => {
       res.status(500).send("Error");
     }
   } else {
+    console.log(`ℹ️ Evento no procesado: ${type}`);
     res.status(200).send("Evento no procesado");
   }
 });
